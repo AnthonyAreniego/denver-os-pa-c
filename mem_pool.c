@@ -156,7 +156,7 @@ pool_pt mem_pool_open(size_t size, alloc_policy policy) {
         pool_store_capacity += MEM_EXPAND_FACTOR;
     }
     // allocate a new mem pool mgr
-    pool_mgr_pt mem_pool_mgr = (pool_mgr_pt*) malloc(sizeof(pool_mgr_t));
+    pool_mgr_pt mem_pool_mgr = (pool_mgr_pt) malloc(sizeof(pool_mgr_t));
     // check success, on error return null
     if(mem_pool_mgr == NULL)
     {
@@ -525,11 +525,6 @@ static alloc_status _mem_remove_from_gap_ix(pool_mgr_pt pool_mgr,
     //    this effectively deletes the chosen node
     // update metadata (num_gaps)
     // zero out the element at position num_gaps!
-
-        int i = 0;
-    while (pool_mgr->gap_ix[i].node != node) {
-        ++i;
-    }
 
     // update metadata (num_gaps)
     pool_mgr->pool.num_gaps--;
