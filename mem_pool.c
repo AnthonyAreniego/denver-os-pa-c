@@ -404,6 +404,17 @@ alloc_status mem_del_alloc(pool_pt pool, alloc_pt alloc) {
     // get node from alloc by casting the pointer to (node_pt)
     node_pt allocNode = (node_pt) alloc;
 
+
+        if(_mem_add_to_gap_ix(pt, alloc->size, allocNode) != ALLOC_OK)
+    {
+        return ALLOC_FAIL;
+    }
+    else
+    {
+        pt->pool.total_size -= alloc->size;
+        (pt->pool.num_allocs)--;
+        return ALLOC_OK;
+    }
     // find the node in the node heap
 
     // this is node-to-delete
@@ -523,13 +534,33 @@ static alloc_status _mem_resize_node_heap(pool_mgr_pt pool_mgr) {
 static alloc_status _mem_resize_gap_ix(pool_mgr_pt pool_mgr) {
     // see above
 
+    if(pool_mgr->gap_ix_capacity < (pool_mgr->gap_ix_capacity * MEM_GAP_IX_FILL_FACTOR))
+    {
+        return ALLOC_FAIL;
+    }
+    return ALLOC_FAIL;
+
+
     return ALLOC_FAIL;
 }
 
 static alloc_status _mem_add_to_gap_ix(pool_mgr_pt pool_mgr,
                                        size_t size,
-                                       node_pt node) {
+                                       node_pt node)
+{
 
+    int i = 0;
+    while(pool_mgr->gap_ix[i].node != NULL)
+    {
+        i++;
+    }
+    pool_mgr->gap_ix[i].node = node;
+    pool_mgr->gap_ix[i].size = size;
+    if(pool_mgr->gap_ix[i].node == NULL) {
+        return ALLOC_FAIL;
+    }
+    else
+    {return ALLOC_OK;}
     // expand the gap index, if necessary (call the function)
     // add the entry at the end
     // update metadata (num_gaps)
@@ -548,6 +579,29 @@ static alloc_status _mem_remove_from_gap_ix(pool_mgr_pt pool_mgr,
     //    this effectively deletes the chosen node
     // update metadata (num_gaps)
     // zero out the element at position num_gaps!
+
+    int i = 0;
+    for(int k = 0; k < pool_mgr->pool.num_gaps; k++)
+    {
+        if(pool_mgr->gap_ix[k].node == node)
+        {
+            i = k;
+        }
+    }
+
+    pool_mgr->gap_ix[i].node = NULL;
+    pool_mgr->gap_ix[i].size = 0;
+    // loop from there to the end of the array:
+    //    pull the entries (i.e. copy over) one position up
+    //    this effectively deletes the chosen node
+    // update metadata (num_gaps)
+    // zero out the element at position num_gaps!
+    if(pool_mgr->gap_ix[i].node == NULL) {
+        return ALLOC_FAIL;
+    }
+    else
+    { return ALLOC_OK;}
+
 
     return ALLOC_FAIL;
 }
